@@ -134,17 +134,38 @@ exports.getAllReservations = getAllReservations;
 
   if (options.city) {
     queryParams.push(`%${options.city}%`);
-    queryString += `WHERE city LIKE $${queryParams.length}`;
+    if (queryString.includes('WHERE')) {
+    queryString += ` AND city LIKE $${queryParams.length}`;
+    } else {
+      queryString += `WHERE city LIKE $${queryParams.length}`;
+    }
   }
 
   if (options.minimum_price_per_night) {
     queryParams.push(`${options.minimum_price_per_night}`);
-    if (!options.city) {
-      queryString += `WHERE cost_per_night > $${queryParams.length}`;
+    if (queryString.includes('WHERE')){
+      queryString += ` AND cost_per_night >= $${queryParams.length}`;
     } else {
-      queryString += ` AND cost_per_night > $${queryParams.length}`;
+      queryString += `WHERE cost_per_night >= $${queryParams.length}`;
     }
-    
+  }
+  
+  if (options.maximum_price_per_night) {
+    queryParams.push(`${options.maximum_price_per_night}`);
+    if (queryString.includes('WHERE')) {
+      queryString += ` AND cost_per_night <= $${queryParams.length}`;
+    } else {
+      queryString += `WHERE cost_per_night <= $${queryParams.length}`;
+    }
+  }
+
+   if (options.minimum_rating) {
+    queryParams.push(`${options.minimum_rating}`);
+    if (queryString.includes('WHERE')) {
+      queryString += ` AND rating >= $${queryParams.length}`
+    } else {
+      queryString += `WHERE rating >= $${queryParams.length}`
+    }
   }
 
   queryParams.push(limit);
@@ -153,6 +174,11 @@ exports.getAllReservations = getAllReservations;
   ORDER BY cost_per_night
   LIMIT $${queryParams.length};
   `;
+
+  // if (options.minimum_rating) {
+  //   queryParams.push(`${options.minimum_rating}`);
+  //   queryString += `HAVING minimum_rating > $${queryParams.length}`
+  // }
 
   console.log('length: ',queryParams.length)
   console.log('string: ', queryString, ' + params: ', queryParams);
